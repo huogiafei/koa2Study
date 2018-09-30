@@ -1,3 +1,4 @@
+/*Static Server with Koa-static*/
 const Koa = require('koa');
 const path = require('path')
 const serve  = require('koa-static')
@@ -7,41 +8,52 @@ const app = new Koa();
 
 const staticPath = './static'
 const fullStaticPath = path.join( __dirname,  staticPath)
-app.use(serve(fullStaticPath))
+app.use(serve(staticPath))
 
 
-let html=''
-
-function fileTree(filePath){
-    fs.readdir(filePath,(err,files)=>{
-        if(err){
-            console.warn(err)
-        }else{
-
-            for(let file of files){
-                let filedir = path.join(filePath,file);
-                console.log(file)
-                fs.stat(filedir,(error,stats)=>{
-                    if(error){
-                        console.warn('attach file failed')
-                    }else{
-                       if(stats.isDirectory()){
-                            fileTree(filedir)
-                       }else{
-                           html = `${html}<li>
-                                <a href="${filedir}">${file}</a>
-                            </li>`
-                       }
-                    }
-                })
-            }
-        }
-    })
+function dir(url ,reqPath) {
+    let contentList = walk(reqPath)
+    let html = `<ul>`
+    for(let item of contentList){
+        html = `
+            ${html}<li><a href="${url==='/'?'':url}/${item}">${item}</a>`
+    }
+    html = `${html}</ul>`
+    return html
 }
-fileTree(fullStaticPath)
+
+function walk(filePath){
+    let dirList = [],fileList = [];
+    let files = fs.readdirSync(filePath)
+    for(item of files){
+        if(item.split('\.').length>1){
+            dirList.push(item)
+        }else{
+            fileList.push(item)
+        }
+    }
+    return dirList.concat(fileList)
+}
+
+async function content(ctx ,fullStaticPath) {
+    let reqPath = path.join(fullStaticPath,ctx.url)
+    let exist = fs.existsSync(reqPath)
+    let content = ""
+    if(exist){
+        let stat = fs.statSync(reqPath)
+        if(stat.isDirectory()){
+            content = dir(ctx.url,reqPath)
+        }
+    }else{
+        content = `<h1>404 Not Found</h1>`
+    }
+    return content
+}
 
 app.use( async ( ctx ) => {
-    ctx.body = `<ul>${html}</ul>`
+    console.log(ctx.url)
+    let _content = await content(ctx,fullStaticPath)
+    ctx.body = _content
 })
 
 app.listen(3000);

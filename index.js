@@ -1,3 +1,4 @@
+/*custom middleware*/
 const Koa = require('Koa');
 const app = new Koa()
 const myRoute = require('./middleware/my-route');
@@ -19,6 +20,10 @@ app.use(async(ctx,next) =>{
 
 app.use(myRoute())
 
-app.listen(3000,()=>{
+app.use(async(ctx)=>{
+    console.log(`${ctx.method} ${ctx.url}`)
+})
+
+app.listen(3001,()=>{
     console.log("running")
 })

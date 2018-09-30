@@ -1,8 +1,8 @@
+/*common middleware*/
 const Koa = require('koa');
 const app = new Koa()
 const Router = require('koa-router');
 const bodyParser = require('koa-bodyparser');
-
 
 const router = new Router();
 

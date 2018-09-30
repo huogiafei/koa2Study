@@ -1,3 +1,4 @@
+/*Static Server*/
 const Koa = require('koa')
 const path = require('path')
 const mimes = require('./util/mime')
